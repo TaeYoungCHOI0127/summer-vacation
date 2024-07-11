@@ -125,3 +125,55 @@ void loop()
   delay(100); // 100ms 대기
 }
 
+---------------------------------------------------------------------------------------------------
+//slave code
+#include <Wire.h> // I2C 통신을 위한 Wire 라이브러리 포함
+
+union FloatUnion 
+{
+  float value;      // float형 멤버 
+  byte bytes[4];    // float 값을 byte로 저장하는 배열
+};
+
+void setup() 
+{
+  Serial.begin(115200);         // 시리얼 통신 시작
+  Wire.begin(8);                // I2C 슬레이브 주소 8번
+  Wire.onReceive(receiveEvent); // 데이터 수신 시 이벤트 핸들러 등록
+}
+
+void loop()
+{
+  delay(100);
+}
+
+// I2C 데이터 수신 시 호출되는 함수
+void receiveEvent(int howMany)   // howmany : 마스터 보드로부터 수신된 바이트의 개수. 이벤트 핸들러로 호출되는 함수의 정수형 인자
+{
+  if (Wire.available() >= 16) // 모든 데이터(16개의 바이트)가 수신될 때까지 대기
+  { 
+    FloatUnion frontUnion, leftUnion, rightUnion, resultUnion;      // 각각의 센서 데이터를 저장하기 위한 FloatUnion 변수들 선언
+    
+    for (int i = 0; i < 4; i++) 
+    {
+      frontUnion.bytes[i] = Wire.read();    // 정면 센서 데이터의 바이트 배열을 읽어서 저장
+    }
+    for (int i = 0; i < 4; i++) 
+    {
+      leftUnion.bytes[i] = Wire.read();     // 정면 센서 데이터의 바이트 배열을 읽어서 저장
+    }
+    for (int i = 0; i < 4; i++) 
+    {
+      rightUnion.bytes[i] = Wire.read();    // 정면 센서 데이터의 바이트 배열을 읽어서 저장
+    }
+    for (int i = 0; i < 4; i++) 
+    {
+      resultUnion.bytes[i] = Wire.read();   // 정면 센서 데이터의 바이트 배열을 읽어서 저장
+    }
+    
+    Serial.print("정면: "); Serial.print(frontUnion.value); Serial.print(" cm, ");
+    Serial.print("왼쪽: "); Serial.print(leftUnion.value); Serial.print(" cm, ");
+    Serial.print("오른쪽: "); Serial.print(rightUnion.value); Serial.print(" cm, ");
+    Serial.print("가변저항 값: "); Serial.print(resultUnion.value); Serial.println(" ");
+  }
+}
